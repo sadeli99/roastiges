@@ -15,20 +15,20 @@ const rateLimiter = new RateLimiterMemory({
 });
 
 const formatData = (objs: {}) => {
-  let biodata = ""
+  let biodata = "";
   const obj = objs as { [key: string]: any };
   Object.keys(obj).forEach(key => {
-    const title = key.replace(/_/g, ' ')
-    let value = `${obj[key]}`
-    if (title){
-      biodata += `${title[0].toUpperCase()+title.slice(1)}: ${value}`
+    const title = key.replace(/_/g, ' ');
+    let value = `${obj[key]}`;
+    if (title) {
+      biodata += `${title[0].toUpperCase() + title.slice(1)}: ${value}`;
     } else {
-      biodata += `${title}: ${value}`
+      biodata += `${title}: ${value}`;
     }
-    biodata += "\n"
+    biodata += "\n";
   });
-  return biodata
-}
+  return biodata;
+};
 
 export async function POST(request: Request) {
   // Rate Limiting
@@ -39,13 +39,13 @@ export async function POST(request: Request) {
     } catch (error) {
       return NextResponse.json(
         { message: "Too many requests, please try again later." },
-        { status: 429 }
+        { status: 429, headers: { "Access-Control-Allow-Origin": "*" } }
       );
     }
   } else {
     return NextResponse.json(
       { message: "Invalid client IP." },
-      { status: 400 }
+      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 
@@ -53,10 +53,10 @@ export async function POST(request: Request) {
   if (!username || !profile) {
     return NextResponse.json(
       { message: "Username and profile data are required" },
-      { status: 400 }
+      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
-  delete profile.avatar
+  delete profile.avatar;
   const biodata = formatData(profile);
 
   try {
@@ -115,27 +115,12 @@ export async function POST(request: Request) {
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    
-    // Mengatur header CORS
-    const headers = new Headers({
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    });
-
-    return NextResponse.json({ roasting: await response.text() }, { headers });
+    return NextResponse.json({ roasting: response.text() }, { headers: { "Access-Control-Allow-Origin": "*" } });
   } catch (error) {
     console.error("Error generating roast:", error);
-    // Mengatur header CORS
-    const headers = new Headers({
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    });
-
     return NextResponse.json(
       { message: "Error generating roast" },
-      { status: 500, headers }
+      { status: 500, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 }
