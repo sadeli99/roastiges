@@ -4,16 +4,9 @@ import {
   HarmCategory,
   HarmBlockThreshold,
 } from "@google/generative-ai";
-import { RateLimiterMemory } from "rate-limiter-flexible";
 
 // Inisialisasi Google Generative AI dengan kunci API dari lingkungan
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
-// Konfigurasi Rate Limiter untuk membatasi jumlah permintaan per IP
-const rateLimiter = new RateLimiterMemory({
-  points: 5, // Maksimal 5 permintaan per 720 detik (12 menit)
-  duration: 720, // Durasi dalam detik untuk reset limit
-});
 
 // Fungsi untuk memformat data profil pengguna menjadi string yang mudah dibaca
 const formatData = (objs: {}) => {
@@ -41,28 +34,6 @@ const formatData = (objs: {}) => {
 
 // Fungsi utama yang menangani permintaan POST untuk melakukan roasting
 export async function POST(request: Request) {
-  // Mendapatkan IP klien dari header permintaan
-  const clientIp = request.headers.get("x-forwarded-for");
-  
-  // Jika IP klien ditemukan, coba konsumsi limit rate untuk IP tersebut
-  if (clientIp) {
-    try {
-      await rateLimiter.consume(clientIp);
-    } catch (error) {
-      // Jika limit tercapai, kembalikan respons 429 (Too Many Requests)
-      return NextResponse.json(
-        { message: "Too many requests, please try again later." },
-        { status: 429 }
-      );
-    }
-  } else {
-    // Jika IP klien tidak valid atau tidak ditemukan, kembalikan respons 400 (Bad Request)
-    return NextResponse.json(
-      { message: "Invalid client IP." },
-      { status: 400 }
-    );
-  }
-
   // Ambil data JSON dari permintaan, termasuk username dan profil
   const { username, profile } = await request.json();
   
