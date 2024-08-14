@@ -153,8 +153,14 @@ export async function GET(request: Request) {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     
-    // Kembalikan hasil roasting dalam format JSON
-    return NextResponse.json({ roasting: response.text() });
+    // Kembalikan hasil roasting dalam format JSON dengan header CORS
+    const responseHeaders = new Headers({
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    });
+
+    return NextResponse.json({ roasting: response.text() }, { headers: responseHeaders });
   } catch (error) {
     // Jika terjadi kesalahan saat menghasilkan roasting, log error dan kembalikan respons 500 (Internal Server Error)
     console.error("Error generating roast:", error);
